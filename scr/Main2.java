@@ -20,6 +20,8 @@ public class Main2 {
 
     }
 
+    private static int[] balances;
+
     public static void main(String[] args) {
 //        Scanner scanner = new Scanner(System.in);
 
@@ -30,7 +32,7 @@ public class Main2 {
         String input = "500 200 300 400";
 //        String input = scanner.nextLine();
 
-        int[] balances = Arrays.stream(input.trim().split(" ")).mapToInt(Integer::parseInt).toArray();
+        balances = Arrays.stream(input.trim().split(" ")).mapToInt(Integer::parseInt).toArray();
 
         System.out.println("Введите количество транзакций: ");
         int m = 3;
@@ -57,15 +59,10 @@ public class Main2 {
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
         for (Transaction transaction : transactions) {
-            executor.execute(() -> {
-                if (transaction.amount <= balances[transaction.fromId]) {
-                    balances[transaction.fromId] -= transaction.amount;
-                    balances[transaction.toId] += transaction.amount;
-                }
-            });
+            executor.execute(() -> makeTransaction(transaction));
         }
 
-        while (!executor.isTerminated()){
+        while (!executor.isTerminated()) {
             executor.shutdown();
         }
 
@@ -73,5 +70,12 @@ public class Main2 {
             System.out.println("Пользователь " + i + " баланс: " + balances[i]);
         }
 //        scanner.close();
+    }
+
+    private synchronized static void makeTransaction(Transaction transaction) {
+        if (transaction.amount <= balances[transaction.fromId]) {
+            balances[transaction.fromId] -= transaction.amount;
+            balances[transaction.toId] += transaction.amount;
+        }
     }
 }
